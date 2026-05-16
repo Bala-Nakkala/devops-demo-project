@@ -3,14 +3,14 @@ pipeline {
   agent any
 
   environment {
-    IMAGE_NAME = "balu9963/demo-java-app"
+    IMAGE_NAME = "Bala-Nakkala/demo-java-app"
   }
 
   stages {
 
     stage('Checkout') {
       steps {
-        git branch: 'main', url: 'https://github.com/Balu9963/devops-demo-project.git'
+        git branch: 'main', url: 'https://github.com/Bala-Nakkala/devops-demo-project.git'
       }
     }
 
