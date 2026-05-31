@@ -1,31 +1,78 @@
-services:
-  jenkins:
-    build:
-      context: ./Jenkins
-      dockerfile: Dockerfile
-    container_name: jenkins
-    ports:
-      - "8010:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - ci-network
-    environment:
-      - JENKINS_OPTS=--httpPort=8080
-
-  sonarqube:
-    image: sonarqube:lts-community
-    container_name: sonarqube
-    ports:
-      - "9000:9000"
-    networks:
-      - ci-network
-
-networks:
-  ci-network:
-    driver: bridge
-
-volumes:
-  jenkins_home:
+pipeline {
+    agent any
+    parameters {
+        string(name: 'build_version', defaultValue: 'V1.0', description: 'Docker image tag')
+    }
+    environment {
+        IMAGE_NAME = "Bala-Nakkala1/demo-java-app"
+        SONAR_URL = "http://sonarqube:9000"
+        BUILD_VERSION = "${params.build_version}"
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Bala-Nakkala/devops-demo-project.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh '''
+                cd demo-java-app
+                mvn clean package
+                '''
+            }
+        }
+        stage('Static Code Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+                    sh '''
+                    cd demo-java-app
+                    mvn sonar:sonar \
+                      -Dsonar.login=$SONAR_AUTH_TOKEN \
+                      -Dsonar.host.url=$SONAR_URL
+                    '''
+                }
+            }
+        }
+        stage('Docker Build') {
+            steps {
+                sh '''
+                cd demo-java-app
+                docker build -t $IMAGE_NAME:$BUILD_VERSION .
+                '''
+            }
+        }
+        stage('Docker Push') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+                    sh '''
+                    echo $PASS | docker login -u $USER --password-stdin
+                    docker push $IMAGE_NAME:$BUILD_VERSION
+                    '''
+                }
+            }
+        }
+        stage('Update Deployment File') {
+            environment {
+                GIT_REPO_NAME = "devops-demo-project"
+                GIT_USER_NAME = "Bala-Nakkala"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                    git config user.email "balakrishna.nakkala@gmail.com"
+                    git config user.name "Balu Nakkala"
+                    sed -i "s/tag: .*/tag: \\"$BUILD_VERSION\\"/" helm/app/values.yaml
+                    git add helm/app/values.yaml
+                    git commit -m "Update deployment image to version $BUILD_VERSION" || true
+                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                    '''
+                }
+            }
+        }
+    }
+}
