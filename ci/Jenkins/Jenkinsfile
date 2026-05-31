@@ -6,7 +6,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        git branch: 'main', url: 'https://github.com/deepakkr35/devops-demo-project.git'
+        git branch: 'main', url: 'https://github.com/Bala-Nakkala/devops-demo-project.git'
       }
     }
     stage('Build and Test') {
@@ -28,7 +28,7 @@ pipeline {
     }
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "deepakkr35/demo-java-app:${build_version}"
+        DOCKER_IMAGE = "balu9963/demo-java-app:${build_version}"
         REGISTRY_CREDENTIALS = credentials('dockerhub')
       }
       steps {
