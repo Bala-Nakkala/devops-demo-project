@@ -15,6 +15,14 @@ services:
     environment:
       - JENKINS_OPTS=--httpPort=8080
 
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    networks:
+      - ci-network
+
 networks:
   ci-network:
     driver: bridge
