@@ -6,7 +6,7 @@ pipeline {
     environment {
         IMAGE_NAME = "bala-nakkala1/demo-java-app"
         SONAR_URL = "http://sonarqube:9000"
-        BUILD_VERSION = "${params.build_version}"
+        BUILD_VERSION = "${params.build_version ?: 'V1.0'}"
     }
     stages {
         stage('Checkout') {
