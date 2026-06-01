@@ -62,7 +62,7 @@ pipeline {
                     sh """
                     git config user.email "balakrishna.nakkala@gmail.com"
                     git config user.name "Balu@N"
-                    sed -i 's|tag: ".*"|tag: "${params.build_version}"|' helm/app/values.yaml
+                    sed -i "s|tag: \\\".*\\\"|tag: \\\"${params.build_version}\\\"|" helm/app/values.yaml
                     git add helm/app/values.yaml
                     git commit -m "Update deployment image to version ${params.build_version}" || true
                     git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
