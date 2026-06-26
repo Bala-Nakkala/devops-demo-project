@@ -4,7 +4,7 @@ pipeline {
         string(name: 'build_version', defaultValue: 'V1.0', description: 'Docker image tag')
     }
     environment {
-        IMAGE_NAME = "balu9963/demo-java-app3"
+        IMAGE_NAME = "balu9963/demo-java-app3.1"
         SONAR_URL = "http://sonarqube:9000"
     }
     stages {
